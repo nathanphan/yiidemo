@@ -15,6 +15,9 @@
  */
 class Post extends CActiveRecord
 {
+    const STATUS_DRAFT=1;
+    const STATUS_PUBLISHED=2;
+    const STATUS_ARCHIVED=3;
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @param string $className active record class name.
@@ -40,16 +43,16 @@ class Post extends CActiveRecord
 	{
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
-		return array(
-			array('author_id', 'required'),
-			array('status, author_id', 'numerical', 'integerOnly'=>true),
-			array('title', 'length', 'max'=>100),
-			array('tags', 'length', 'max'=>45),
-			array('content, create_time, update_time', 'safe'),
-			// The following rule is used by search().
-			// Please remove those attributes that should not be searched.
-			array('id, title, content, tags, status, create_time, update_time, author_id', 'safe', 'on'=>'search'),
-		);
+		 return array(
+                    array('title, content, status, author_id', 'required'),
+                    array('title', 'length', 'max'=>128),
+                    array('status', 'in', 'range'=>array(1,2,3)),
+                    array('tags', 'match', 'pattern'=>'/^[\w\s,]+$/',
+                        'message'=>'Tags can only contain word characters.'),
+                    array('tags', 'normalizeTags'),
+
+                    array('title, status', 'safe', 'on'=>'search'),
+                );
 	}
 
 	/**
@@ -104,4 +107,14 @@ class Post extends CActiveRecord
 			'criteria'=>$criteria,
 		));
 	}
+
+        public function getUrl()
+        {
+            return Yii::app()->createUrl('post/view', array(
+                'id'=>$this->id,
+                'title'=>$this->title,
+            ));
+        }
+
+     
 }
